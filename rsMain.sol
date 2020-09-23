@@ -3,8 +3,11 @@ contract reMain{
     address buyer; // 買家初始化地址
     address gov_agent; // 政府（稅款）
     address bank_agent; // 銀行（貸款）
-    
-    string [12] data ;
+    bool HPV_collect;   //房屋現值確認
+    bool DT_cal_collect;//契稅確認
+    bool LVIT_cal_collect;//土地增值稅確認
+    bool loan_cal_collect;//貸款確認
+    string [13] data ;
     
     // 0: 買家填入資訊, 1: 銀行、政府審核, 2: Done
     enum Status {
@@ -48,8 +51,9 @@ contract reMain{
     data[8]=DT_cal(data[7]); // 契稅
     (data[9], data[10])=get_CLV_ALV(houseNumber); // 公告地價, 土地公告現值
     data[11]=LVIT_cal(data[10],data[9],area);
+    data[12]=loan_cal(data[6]);//貸款
     
-    buyer = msg.sender; // 設定buyer address
+    buyer = msg.sender; // 紀錄buyer address
     emit statusEvt(Status.agentsVerify); // 資料填寫完成 轉移到審核狀態
     }
     
@@ -100,7 +104,58 @@ contract reMain{
     function getData() view returns(string, string, string, string, string){
         return (data[7],data[8],data[9],data[10],data[11]);
     }
+        function getRoles() view returns(address, address, address){
+        return (buyer, gov_agent, bank_agent);
+    }
     /**
      * 智能合約在初始化時自動運算 - End
      */
+    function compareHPV_price(string gov_price) isGov public returns(bool){
+        if(keccak256(data[7])==keccak256(gov_price)){
+            HPV_collect=true;
+            return true;
+        }
+        else
+            return false;
+    }
+    function compareDT_cal(string gov_price) isGov public returns(bool){
+        if(keccak256(data[8])==keccak256(gov_price)){
+            DT_cal_collect=true;
+            return true;
+        }
+        else
+            return false;    
+        }
+    function compareLVIT_cal(string gov_price) isGov public returns(bool) {
+        if(keccak256(data[11])==keccak256(gov_price)){
+            LVIT_cal_collect=true;
+            return true;
+        }
+        else
+            return false;
+    }
+    function loan_cal(string bank_price)  public returns(string){
+        return "5000000";
+    }function compareloan_cal(string bank_price) isBank public returns(bool){
+        if(keccak256(data[12])==keccak256(bank_price)){
+            loan_cal_collect=true;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    function settingRole (string role) public {
+        if(keccak256(role)==keccak256("bank")){
+            bank_agent = msg.sender;
+        }
+        if(keccak256(role)==keccak256("govenment")){
+            gov_agent = msg.sender;
+        }
+    
+    }
+
+
+
+
 }
