@@ -38,7 +38,7 @@ contract reMain{
     }    
     // 買方填寫
     // 買方姓名,賣家姓名,面積,建物現況格局,聯絡電話,建物門牌,交易總價   
-    constructor(string buyerName,string sellerName,string area,string buildPattern,string phone,string houseNumber,string totalPrice){    
+    constructor(string buyerName,string sellerName,string area,string buildPattern,string phone,string houseNumber,string totalPrice){   
     data[0]=buyerName; // 買家姓名
     data[1]=sellerName; // 賣家姓名
     data[2]=area; // 面積
