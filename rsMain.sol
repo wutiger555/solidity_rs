@@ -2,7 +2,7 @@ pragma solidity ^0.4.23;
 contract reMain{
     address buyer; // 買家初始化地址
     address gov_agent; // 政府（稅款）
-    address bank_agent; // 銀行（貸款）111
+    address bank_agent; // 銀行（貸款）
     
     string [12] data ;
     
