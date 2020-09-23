@@ -8,24 +8,25 @@ contract reMain{
     bool LVIT_cal_collect;//土地增值稅確認
     bool loan_cal_collect;//貸款確認
     string [13] data ;
-    
-    // 0: 買家填入資訊, 1: 銀行、政府審核, 2: Done
+    //enum型態為使用者可以自定義變數而不需要指定型態
+    //表示合約目前執行至何階段 0: 買家填入資訊, 1: 銀行、政府審核, 2: Done
     enum Status {
         contractInit, agentsVerify, contractComplete
     }
+    //將status物件new出來
     Status public status;
     event statusEvt(Status status);
-    
+    //確認使用者身分為買家
     modifier isBuyer{
         require(msg.sender == buyer);
         _;
     }
-    
+    //確認使用者身分為銀行部門
     modifier isBank{
         require(msg.sender == bank_agent);
         _;
     }
-
+    //確認使用者身分為政府部門
     modifier isGov{
         require(msg.sender == gov_agent);
         _;
@@ -34,11 +35,9 @@ contract reMain{
     modifier inStatus(Status _status){
         require(status == _status);
         _;
-    }
-    
+    }    
     // 買方填寫
-    // 買方姓名,賣家姓名,面積,建物現況格局,聯絡電話,建物門牌,交易總價
-    
+    // 買方姓名,賣家姓名,面積,建物現況格局,聯絡電話,建物門牌,交易總價   
     constructor(string buyerName,string sellerName,string area,string buildPattern,string phone,string houseNumber,string totalPrice){    
     data[0]=buyerName; // 買家姓名
     data[1]=sellerName; // 賣家姓名
@@ -50,52 +49,60 @@ contract reMain{
     data[7]=get_HPV(sellerName); // 房屋現值
     data[8]=DT_cal(data[7]); // 契稅
     (data[9], data[10])=get_CLV_ALV(houseNumber); // 公告地價, 土地公告現值
-    data[11]=LVIT_cal(data[10],data[9],area);
+    data[11]=LVIT_cal(data[10],data[9],area);//土地增值稅
     data[12]=loan_cal(data[6]);//貸款
     
     buyer = msg.sender; // 紀錄buyer address
+    //emit表示觸發事件
     emit statusEvt(Status.agentsVerify); // 資料填寫完成 轉移到審核狀態
     }
     
-    /**
+    /*
      * 智能合約在初始化時自動運算 - Start
      */
-    // House Present Value Calculate 房屋現值獲取 從政府資料庫
-    // input: 賣家姓名, output: 房屋現值
-    function get_HPV(string name) returns(string){
-        return "1000000";
-    }
+    
     // Deed Tax Calculate 契稅計算
     // input: 房屋現值, output: 契稅
     function DT_cal(string HPV_price) returns(string){
         return "10000";
     }
+    // Loan calculate 貸款計算
+    //input: 房屋價格 output: 貸款金額
+    function loan_cal(string bank_price)  public returns(string){
+        return "5000000";
+    }
+    // (公告地價*面積)-(公告現值*面積)*10% = 土地增值稅
+    // Land Value Increment Tax Calculate 土地增值稅計算
+    // input: (公告地價, 公告現值, 面積), output: 土地增值稅
+    function LVIT_cal(string ALV_price, string CLV_price, string area) returns(string){
+    // uint LVIT_price = (ALV_price*area)-(CLV_price*area)/10;
+    // uint LVIT_price = 1234567;
+        return "1234567";
+    }
     // Annoced Land Value&Current Land Value   土地公告現值＆公告地價獲取 從政府資料庫
     // input: 地址, output: 公告地價,土地公告現值
     function get_CLV_ALV(string addrss) returns(string,string){
         // uint ALV_price = 278347;  // fake 公告地價   data
-        // uint CLV_price = 1018182; // fake 土地公告現值data
-         
+        // uint CLV_price = 1018182; // fake 土地公告現值data       
         return ("278347","1018182");
     }
-    // (公告地價*面積)-(公告現值*面積)*10%
-    // Land Value Increment Tax 土地增值稅計算
-    // input: (公告地價, 公告現值, 面積), output: 土地增值稅
-    function LVIT_cal(string ALV_price, string CLV_price, string area) returns(string){
-        // uint LVIT_price = (ALV_price*area)-(CLV_price*area)/10;
-       // uint LVIT_price = 1234567;
-        return "1234567";
+    // House Present Value Calculate 房屋現值獲取 從政府資料庫
+    // input: 賣家姓名, output: 房屋現值
+    function get_HPV(string name) returns(string){
+        return "1000000";
     }
-   
     function getData() view returns(string, string, string, string, string){
         return (data[7],data[8],data[9],data[10],data[11]);
     }
-        function getRoles() view returns(address, address, address){
+    function getRoles() view returns(address, address, address){
         return (buyer, gov_agent, bank_agent);
     }
-    /**
+    /*
      * 智能合約在初始化時自動運算 - End
      */
+    
+    //--------------------------------以下為比較資料------------------------------------
+
     function compareHPV_price(string gov_price) isGov public returns(bool){
         if(keccak256(data[7])==keccak256(gov_price)){
             HPV_collect=true;
@@ -113,7 +120,7 @@ contract reMain{
         }
         else
             return false;    
-        }
+    }
     function compareLVIT_cal(string gov_price) isGov public returns(bool) {
         if(keccak256(data[11])==keccak256(gov_price)){
             LVIT_cal_collect=true;
@@ -122,10 +129,9 @@ contract reMain{
         }
         else
             return false;
+        
     }
-    function loan_cal(string bank_price)  public returns(string){
-        return "5000000";
-    }function compareloan_cal(string bank_price) isBank public returns(bool){
+    function compareloan_cal(string bank_price) isBank public returns(bool){
         if(keccak256(data[12])==keccak256(bank_price)){
             loan_cal_collect=true;
             check();
@@ -134,7 +140,10 @@ contract reMain{
         else
             return false;
     }
-
+    
+    //-------------------------------------------------------------------------
+    
+    //用於系統確認為銀行或是政府並將當前address記錄起來
     function settingRole (string role) public {
         if(keccak256(role)==keccak256("bank")){
             bank_agent = msg.sender;
@@ -143,6 +152,7 @@ contract reMain{
             gov_agent = msg.sender;
         }
     }
+    //確保所有資訊均為正確後，觸發最後事件contractComplete
     function check() public returns(bool){
         if(DT_cal_collect==true&&HPV_collect==true&&loan_cal_collect==true&&LVIT_cal_collect==true){
             emit statusEvt(Status.contractComplete);
