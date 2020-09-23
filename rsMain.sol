@@ -83,24 +83,10 @@ contract reMain{
     // input: (公告地價, 公告現值, 面積), output: 土地增值稅
     function LVIT_cal(string ALV_price, string CLV_price, string area) returns(string){
         // uint LVIT_price = (ALV_price*area)-(CLV_price*area)/10;
-        uint LVIT_price = 1234567;
-        return uintToString(LVIT_price);
+       // uint LVIT_price = 1234567;
+        return "1234567";
     }
-    function uintToString(uint v) constant returns (string str) {
-        uint maxlength = 100;
-        bytes memory reversed = new bytes(maxlength);
-        uint i = 0;
-        while (v != 0) {
-            uint remainder = v % 10;
-            v = v / 10;
-            reversed[i++] = byte(48 + remainder);
-        }
-        bytes memory s = new bytes(i + 1);
-        for (uint j = 0; j <= i; j++) {
-            s[j] = reversed[i - j];
-        }
-        str = string(s);
-    }
+   
     function getData() view returns(string, string, string, string, string){
         return (data[7],data[8],data[9],data[10],data[11]);
     }
@@ -113,6 +99,7 @@ contract reMain{
     function compareHPV_price(string gov_price) isGov public returns(bool){
         if(keccak256(data[7])==keccak256(gov_price)){
             HPV_collect=true;
+            check();
             return true;
         }
         else
@@ -121,6 +108,7 @@ contract reMain{
     function compareDT_cal(string gov_price) isGov public returns(bool){
         if(keccak256(data[8])==keccak256(gov_price)){
             DT_cal_collect=true;
+            check();
             return true;
         }
         else
@@ -129,6 +117,7 @@ contract reMain{
     function compareLVIT_cal(string gov_price) isGov public returns(bool) {
         if(keccak256(data[11])==keccak256(gov_price)){
             LVIT_cal_collect=true;
+            check();
             return true;
         }
         else
@@ -139,6 +128,7 @@ contract reMain{
     }function compareloan_cal(string bank_price) isBank public returns(bool){
         if(keccak256(data[12])==keccak256(bank_price)){
             loan_cal_collect=true;
+            check();
             return true;
         }
         else
@@ -152,10 +142,13 @@ contract reMain{
         if(keccak256(role)==keccak256("govenment")){
             gov_agent = msg.sender;
         }
-    
     }
-
-
-
-
+    function check() public returns(bool){
+        if(DT_cal_collect==true&&HPV_collect==true&&loan_cal_collect==true&&LVIT_cal_collect==true){
+            emit statusEvt(Status.contractComplete);
+            return true;
+        }
+        else
+            return false;
+    }
 }
